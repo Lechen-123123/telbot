@@ -1,19 +1,28 @@
+import os
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
-import configparser
 import logging
 from azure.cosmos import CosmosClient, exceptions, PartitionKey
 from gpt_hk import HKBU_ChatGPT
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
-
 from tarot_card_game import tarot_game
 import time
 import json
 
 
 def main():
-    config = configparser.ConfigParser()
-    config.read('config.ini')
+    # Build config dictionary from environment variables
+    config = {
+        'TELEGRAM': {
+            'ACCESS_TOKEN': os.environ.get('TELEGRAM_ACCESS_TOKEN')
+        },
+        'COSMOS': {
+            'URL': os.environ.get('COSMOS_URL'),
+            'KEY': os.environ.get('COSMOS_KEY'),
+            'DATABASE_ID': os.environ.get('COSMOS_DATABASE_ID'),
+            'CONTAINER_ID': os.environ.get('COSMOS_CONTAINER_ID')
+        }
+    }
 
     updater = Updater(token=config['TELEGRAM']['ACCESS_TOKEN'], use_context=True)
     dispatcher = updater.dispatcher
@@ -58,8 +67,10 @@ def handle_chatgpt(update: Update, context: CallbackContext) -> None:
         reply = future.result(timeout=20)
         context.bot.send_message(chat_id=update.effective_chat.id, text=reply)
     except TimeoutError:
-        context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text="ChatGPT is taking too long, please try again later.")
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="ChatGPT is taking too long, please try again later."
+        )
 
 
 def handle_help(update: Update, context: CallbackContext) -> None:
@@ -103,7 +114,10 @@ def handle_tarot(update: Update, context: CallbackContext) -> None:
     user_key = f"tarot_analysis:{update.effective_chat.id}"
 
     result = tarot_game()
-    analysis_prompt = f"User draws tarot card: {result}. Please analyze the implications of this card for the user's current situation and provide suggestions."
+    analysis_prompt = (
+        f"User draws tarot card: {result}. "
+        "Please analyze the implications of this card for the user's current situation and provide suggestions."
+    )
 
     chatgpt = context.bot_data.get('chatgpt')
     executor = context.bot_data.get('executor')
@@ -167,6 +181,7 @@ def handle_match(update: Update, context: CallbackContext) -> None:
         update.message.reply_text(f"Match successful, the other party's phone number is: {matching_phone}")
     else:
         update.message.reply_text("There are currently no users matching the same card. Please try again later.")
+
 
 if __name__ == '__main__':
     main()
