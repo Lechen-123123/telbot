@@ -1,25 +1,20 @@
 import configparser
 import requests
 
-class HKBU_ChatGPT():
-    def __init__(self, config_='./config.ini'):
-        if type(config_) == str:
-            self.config = configparser.ConfigParser()
-            self.config.read(config_)
-        elif type(config_) == configparser.ConfigParser:
-            self.config = config_
+class HKBU_ChatGPT:
+    def __init__(self, config):
+        if not isinstance(config, dict):
+            raise TypeError("Config must be a dictionary.")
+        self.config = config
 
     def submit(self, message):
         conversation = [{"role": "user", "content": message}]
-
-        url = (self.config['CHATGPT']['BASICURL']) + \
-              "/deployments/" + (self.config['CHATGPT']['MODELNAME']) + \
-              "/chat/completions/?api-version=" + \
-              (self.config['CHATGPT']['APIVERSION'])
-
+        url = (self.config['CHATGPT']['BASICURL'] +
+               "/deployments/" + self.config['CHATGPT']['MODELNAME'] +
+               "/chat/completions/?api-version=" + self.config['CHATGPT']['APIVERSION'])
         headers = {
             'Content-Type': 'application/json',
-            'api-key': (self.config['CHATGPT']['ACCESS_TOKEN'])
+            'api-key': self.config['CHATGPT']['ACCESS_TOKEN']
         }
         payload = {'messages': conversation}
         response = requests.post(url, json=payload, headers=headers)

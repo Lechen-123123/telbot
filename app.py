@@ -21,6 +21,12 @@ def main():
             'KEY': os.environ.get('COSMOS_KEY'),
             'DATABASE_ID': os.environ.get('COSMOS_DATABASE_ID'),
             'CONTAINER_ID': os.environ.get('COSMOS_CONTAINER_ID')
+        },
+        'CHATGPT':{
+            'BASICURL': os.environ.get('CHATGPT_BASICURL'),
+            'MODELNAME': os.environ.get('CHATGPT_MODELNAME'),
+            'APIVERSION': os.environ.get('CHATGPT_APIVERSION'),
+            'ACCESS_TOKEN': os.environ.get('CHATGPT_ACCESS_TOKEN')
         }
     }
 
